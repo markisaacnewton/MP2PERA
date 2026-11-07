@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pag-IBIG MP2 & PERA Wealth Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF & AutoTable CDNs for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        phRed: {
+                            50: '#FDF2F2',
+                            100: '#FDE8E8',
+                            500: '#E53E3E',
+                            600: '#D32F2F',
+                            700: '#B71C1C',
+                            800: '#9B1C1C',
+                            900: '#771D1D'
+                        },
+                        phNavy: '#1E293B',
+                        phGold: '#D97706'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- TOP HEADER / NAV -->
+    <header class="bg-gradient-to-r from-phRed-700 via-phRed-600 to-phRed-800 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white text-phRed-700 p-2.5 rounded-xl shadow-md flex items-center justify-center font-bold">
+                        <i class="fa-solid me-1 fa-coins text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Pinoy Investor Calculator</h1>
+                        <p class="text-xs sm:text-sm text-phRed-100 font-medium">Pag-IBIG MP2 & PERA (Personal Equity and Retirement Account)</p>
+                    </div>
+                </div>
+
+                <!-- DUAL TABS / SWITCHER -->
+                <div class="bg-phRed-900/40 p-1.5 rounded-xl flex items-center shadow-inner border border-white/10 self-start md:self-auto">
+                    <button id="tab-mp2-btn" onclick="switchTab('mp2')" 
+                        class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 bg-white text-phRed-700 shadow-md">
+                        <i class="fa-solid fa-piggy-bank"></i>
+                        <span>Pag-IBIG MP2</span>
+                    </button>
+                    <button id="tab-pera-btn" onclick="switchTab('pera')" 
+                        class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 text-white hover:text-white/90 hover:bg-white/10">
+                        <i class="fa-solid fa-chart-line font-bold"></i>
+                        <span>PERA Retirement</span>
+                    </button>
+                    <button id="tab-compare-btn" onclick="switchTab('compare')" 
+                        class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 text-white hover:text-white/90 hover:bg-white/10">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <span>Comparison Matrix</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+
+        <!-- TAB 1: PAG-IBIG MP2 CALCULATOR -->
+        <div id="mp2-section" class="space-y-6">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="inline-flex items-center gap-2 bg-phRed-50 text-phRed-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-shield-halved"></i> 100% Tax-Free & Government Guaranteed
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">Pag-IBIG Modified MP2 Savings Calculator</h2>
+                    <p class="text-sm text-slate-500">Calculate annual dividend returns, total savings, and compounded maturity for monthly, lump sum, or customized yearly deposits.</p>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                    <div class="text-left md:text-right bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="text-[10px] text-slate-400 font-semibold block uppercase">Latest Declared MP2 Rate</span>
+                        <span id="mp2-latest-rate-badge" class="text-sm font-extrabold text-slate-800">7.12% <span class="text-xs font-normal text-slate-500">(2025 Rate)</span></span>
+                    </div>
+                    <button id="update-mp2-btn" onclick="fetchLatestMP2Rates()" 
+                        class="px-3.5 py-2.5 bg-phRed-600 hover:bg-phRed-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 shrink-0">
+                        <i id="update-mp2-icon" class="fa-solid fa-arrows-rotate"></i>
+                        <span>Update Rates</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-sliders text-phRed-600"></i> Investment Parameters
+                    </h3>
+
+                    <div>
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-600 block mb-2">Deposit Strategy / Frequency</label>
+                        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                            <button type="button" id="mp2-mode-monthly-btn" onclick="setMP2Mode('monthly')"
+                                class="py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200">
+                                Monthly
+                            </button>
+                            <button type="button" id="mp2-mode-lumpsum-btn" onclick="setMP2Mode('lumpsum')"
+                                class="py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-800">
+                                Lump Sum
+                            </button>
+                            <button type="button" id="mp2-mode-custom-btn" onclick="setMP2Mode('custom')"
+                                class="py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-800">
+                                Customized
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Standard Amount Inputs (For Monthly & Lump Sum) -->
+                    <div id="mp2-standard-input-container">
+                        <div class="flex justify-between items-center mb-2">
+                            <label id="mp2-amount-label" class="text-xs font-bold uppercase tracking-wider text-slate-600">Monthly Contribution (PHP)</label>
+                            <span id="mp2-min-badge" class="text-xs text-phRed-600 font-bold bg-phRed-50 px-2 py-0.5 rounded">Min: ₱500</span>
+                        </div>
+                        <div class="relative rounded-xl shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-semibold">₱</div>
+                            <input type="number" id="mp2-amount" min="500" step="500" value="5000" oninput="calculateMP2()"
+                                class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-phRed-600 focus:border-phRed-600 text-slate-800 font-semibold text-lg transition-all">
+                        </div>
+                        <input type="range" id="mp2-amount-slider" min="500" max="100000" step="500" value="5000" oninput="syncMP2Slider('amount', this.value)"
+                            class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-phRed-600 mt-3">
+                    </div>
+
+                    <!-- Customized Year Inputs Container -->
+                    <div id="mp2-custom-inputs-container" class="hidden space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 max-h-60 overflow-y-auto custom-scrollbar">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold uppercase text-slate-700">Custom Annual Deposit (PHP)</span>
+                            <span class="text-[10px] text-slate-400">Put 0 for skipped years</span>
+                        </div>
+                        <div id="mp2-custom-years-list" class="space-y-2">
+                            <!-- Injected by Javascript -->
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Est. Dividend Rate (% per annum)</label>
+                            <span id="mp2-rate-val" class="text-sm font-extrabold text-phRed-700">7.12%</span>
+                        </div>
+                        <input type="range" id="mp2-rate-slider" min="4.0" max="10.0" step="0.01" value="7.12" oninput="syncMP2Slider('rate', this.value)"
+                            class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-phRed-600">
+                        <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+                            <span>4.0%</span>
+                            <span>7.12% (Latest)</span>
+                            <span>10.0%</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-600 block mb-2">Investment Lock-in Horizon</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" onclick="setMP2Term(5)" id="mp2-term-5" class="mp2-term-btn py-2 text-xs font-bold rounded-xl border border-phRed-600 bg-phRed-50 text-phRed-700 transition-all">5 Yrs</button>
+                            <button type="button" onclick="setMP2Term(10)" id="mp2-term-10" class="mp2-term-btn py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all">10 Yrs</button>
+                            <button type="button" onclick="setMP2Term(15)" id="mp2-term-15" class="mp2-term-btn py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all">15 Yrs</button>
+                            <button type="button" onclick="setMP2Term(20)" id="mp2-term-20" class="mp2-term-btn py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all">20 Yrs</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-600 block mb-2">Dividend Payout Preference</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <label class="cursor-pointer border border-slate-200 bg-slate-50 p-3 rounded-xl flex items-start gap-3 hover:border-phRed-300 transition-all">
+                                <input type="radio" name="mp2-payout-type" value="compounded" checked onchange="calculateMP2()" class="mt-0.5 text-phRed-600 focus:ring-phRed-500">
+                                <div>
+                                    <span class="text-xs font-bold block text-slate-800">Compounded</span>
+                                    <span class="text-[10px] text-slate-500 leading-tight block">Dividends reinvested annually until term ends.</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer border border-slate-200 bg-slate-50 p-3 rounded-xl flex items-start gap-3 hover:border-phRed-300 transition-all">
+                                <input type="radio" name="mp2-payout-type" value="annual" onchange="calculateMP2()" class="mt-0.5 text-phRed-600 focus:ring-phRed-500">
+                                <div>
+                                    <span class="text-xs font-bold block text-slate-800">Annual Payout</span>
+                                    <span class="text-[10px] text-slate-500 leading-tight block">Dividends credited to your bank account yearly.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="mp2-status-toast" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center justify-between">
+                        <span><i class="fa-solid fa-circle-check me-1.5 text-emerald-600"></i> <span id="mp2-status-msg">Historical MP2 dividend rates synced!</span></span>
+                        <span class="font-extrabold">7.12%</span>
+                    </div>
+
+                </div>
+
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Contribution</span>
+                            <div id="mp2-res-principal" class="text-xl font-black text-slate-800">₱0</div>
+                            <span id="mp2-res-principal-sub" class="text-[11px] text-slate-500">Your out-of-pocket savings</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1 border-l-4 border-l-phRed-600">
+                            <span class="text-xs font-bold uppercase tracking-wider text-phRed-600">Total Dividends</span>
+                            <div id="mp2-res-dividend" class="text-xl font-black text-phRed-600">₱0</div>
+                            <span class="text-[11px] text-slate-500">100% Tax-Free Earnings</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-phRed-700 to-phRed-800 p-4 rounded-2xl shadow-md text-white space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-phRed-200">Maturity Value</span>
+                            <div id="mp2-res-maturity" class="text-2xl font-black text-white">₱0</div>
+                            <span id="mp2-res-maturity-sub" class="text-[11px] text-phRed-100 block">Total payout after 5 years</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-chart-column text-phRed-600"></i> Investment Growth Trajectory
+                            </h4>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">Annual Accumulation</span>
+                        </div>
+                        <div class="h-64 w-full relative">
+                            <canvas id="mp2Chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MP2 Detailed Schedule Table & Export Option -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-list-check text-phRed-600"></i> Year-by-Year Schedule Breakdown
+                        </h3>
+                        <p class="text-xs text-slate-500">Detailed overview of principal accumulated, annual dividends, and maturity end balance.</p>
+                    </div>
+                    
+                    <!-- DOWNLOAD / EXPORT MP2 PDF BUTTON -->
+                    <button onclick="exportMP2PDF()" 
+                        class="px-4 py-2 bg-phRed-700 hover:bg-phRed-800 text-white rounded-xl text-xs font-bold transition-all shadow border border-phRed-800 flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-file-pdf text-sm"></i>
+                        <span>Download MP2 Summary (PDF)</span>
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs sm:text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-y border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+                                <th class="py-3 px-4">Year</th>
+                                <th class="py-3 px-4">Start Balance</th>
+                                <th class="py-3 px-4">Deposit Amount</th>
+                                <th class="py-3 px-4">Dividends Earned</th>
+                                <th class="py-3 px-4">Payout / Action</th>
+                                <th class="py-3 px-4 text-right">End Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mp2-table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <!-- JS injected rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PERA (PERSONAL EQUITY & RETIREMENT ACCOUNT) CALCULATOR -->
+        <div id="pera-section" class="space-y-6 hidden">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-building-columns"></i> R.A. 9505 Tax-Free Benefit at Age 55
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">PERA Retirement & Tax Savings Calculator</h2>
+                    <p class="text-sm text-slate-500">Calculate investment growth, 5% Income Tax Credit benefit, and projected net early withdrawal amounts with tax penalties.</p>
+                </div>
+                <div class="text-left sm:text-right bg-slate-50 p-3 rounded-xl border border-slate-100 min-w-[200px]">
+                    <span class="text-xs text-slate-400 font-semibold block uppercase">Tax-Free Age Lock-in</span>
+                    <span class="text-sm font-bold text-slate-700">55 Years Old <span class="text-xs text-slate-500">(Min. 5 yrs contrib)</span></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-sliders text-phRed-600"></i> PERA Parameters
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600 block mb-2">Current Age (Years)</label>
+                            <input type="number" id="pera-current-age" min="18" max="54" value="30" oninput="calculatePERAHorizonFromAge()"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-phRed-600 focus:border-phRed-600 text-slate-800 font-bold text-base transition-all">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Retirement Target</label>
+                            <div class="px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl font-extrabold text-phRed-700 text-base flex items-center justify-between">
+                                <span>55 Yrs Old</span>
+                                <i class="fa-solid fa-lock text-slate-400 text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-600 block mb-2">Contributor Classification</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="setPERACategory('local')" id="pera-cat-local" 
+                                class="pera-cat-btn py-2.5 px-3 text-xs font-bold rounded-xl border border-phRed-600 bg-phRed-50 text-phRed-700 transition-all text-center">
+                                <i class="fa-solid fa-user me-1"></i> Local Resident
+                            </button>
+                            <button type="button" onclick="setPERACategory('ofw')" id="pera-cat-ofw" 
+                                class="pera-cat-btn py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all text-center">
+                                <i class="fa-solid fa-plane-departure me-1"></i> Overseas Filipino (OFW)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-600 block mb-2">Contribution Frequency</label>
+                        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                            <button type="button" id="pera-mode-monthly-btn" onclick="setPERAMode('monthly')"
+                                class="py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200">
+                                Monthly
+                            </button>
+                            <button type="button" id="pera-mode-lumpsum-btn" onclick="setPERAMode('lumpsum')"
+                                class="py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-800">
+                                Lump Sum
+                            </button>
+                            <button type="button" id="pera-mode-custom-btn" onclick="setPERAMode('custom')"
+                                class="py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-800">
+                                Customized
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pera-limit-badge" class="p-2.5 bg-slate-100 rounded-xl text-xs text-slate-600 flex justify-between items-center">
+                        <span>Max Annual PERA Cap:</span>
+                        <span class="font-extrabold text-phRed-700">₱200,000 / year</span>
+                    </div>
+
+                    <!-- Standard PERA Inputs -->
+                    <div id="pera-standard-input-container">
+                        <div class="flex justify-between items-center mb-2">
+                            <label id="pera-amount-label" class="text-xs font-bold uppercase tracking-wider text-slate-600">Monthly Contribution (PHP)</label>
+                            <span id="pera-annual-equiv" class="text-xs font-bold text-slate-500">₱100,000 / yr</span>
+                        </div>
+                        <div class="relative rounded-xl shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-semibold">₱</div>
+                            <input type="number" id="pera-amount" min="1000" max="16666" step="500" value="8333" oninput="calculatePERA()"
+                                class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-phRed-600 focus:border-phRed-600 text-slate-800 font-semibold text-lg transition-all">
+                        </div>
+                        <input type="range" id="pera-amount-slider" min="1000" max="16666" step="500" value="8333" oninput="syncPERASlider('amount', this.value)"
+                            class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-phRed-600 mt-3">
+                    </div>
+
+                    <!-- Customized PERA Inputs Container -->
+                    <div id="pera-custom-inputs-container" class="hidden space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 max-h-60 overflow-y-auto custom-scrollbar">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold uppercase text-slate-700">Custom Annual Deposit (PHP)</span>
+                            <span class="text-[10px] text-slate-400">Put 0 for skipped years</span>
+                        </div>
+                        <div id="pera-custom-years-list" class="space-y-2">
+                            <!-- Injected by Javascript -->
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Est. Investment Return (% p.a.)</label>
+                            <span id="pera-rate-val" class="text-sm font-extrabold text-phRed-700">6.0%</span>
+                        </div>
+                        <input type="range" id="pera-rate-slider" min="2.0" max="12.0" step="0.5" value="6.0" oninput="syncPERASlider('rate', this.value)"
+                            class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-phRed-600">
+                        <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+                            <span>2.0% (Conservative)</span>
+                            <span>6.0% (Moderate)</span>
+                            <span>12.0% (Aggressive)</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Investment Horizon (Until Age 55)</label>
+                            <span id="pera-horizon-val" class="text-sm font-extrabold text-phRed-700">25 Yrs</span>
+                        </div>
+                        <input type="range" id="pera-horizon-slider" min="5" max="37" step="1" value="25" oninput="syncPERASlider('horizon', this.value)"
+                            class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-phRed-600">
+                        <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+                            <span>5 Yrs (Min)</span>
+                            <span id="pera-age-badge" class="font-bold text-phRed-700">25 Yrs (Age 30 to 55)</span>
+                            <span>37 Yrs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Capital</span>
+                            <div id="pera-res-principal" class="text-lg font-black text-slate-800">₱0</div>
+                            <span class="text-[10px] text-slate-400">Personal Outlay</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Fund Growth</span>
+                            <div id="pera-res-growth" class="text-lg font-black text-emerald-600">₱0</div>
+                            <span class="text-[10px] text-slate-400">Compound Returns</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1 border-l-4 border-l-amber-500">
+                            <span class="text-xs font-bold uppercase tracking-wider text-amber-600">5% Tax Credits</span>
+                            <div id="pera-res-tax-credits" class="text-lg font-black text-amber-600">₱0</div>
+                            <span class="text-[10px] text-slate-400">BIR Tax Voucher Saved</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-4 rounded-2xl shadow-md text-white space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Total Benefit (Age 55)</span>
+                            <div id="pera-res-total-value" class="text-lg font-black text-white">₱0</div>
+                            <span class="text-[10px] text-slate-300">Tax-Free Lump Sum</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 font-bold">
+                                <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold uppercase text-emerald-900 tracking-wider">Tax Exemption Benefit at Age 55</h4>
+                                <p class="text-xs text-emerald-700">PERA withdrawals upon reaching 55 are 100% tax-free (saving 15% final tax vs bank trust funds).</p>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-[10px] uppercase font-bold text-emerald-600 block">Est. Tax Saved on Gains</span>
+                            <span id="pera-res-cg-tax-saved" class="text-base font-black text-emerald-800">₱0</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-chart-area text-phRed-600"></i> Retirement Fund & Tax Credit Growth
+                            </h4>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">Fund Value vs Tax Savings</span>
+                        </div>
+                        <div class="h-64 w-full relative">
+                            <canvas id="peraChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERA Detailed Schedule Table & Export Option -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-list-check text-phRed-600"></i> PERA Multi-Year Projection & Early Withdrawal Schedule
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Includes BIR Early Withdrawal Penalties (20% Tax Penalty on Investment Growth + 5% Tax Credit Repayment).</p>
+                    </div>
+                    
+                    <!-- DOWNLOAD / EXPORT PERA PDF BUTTON -->
+                    <button onclick="exportPERAPDF()" 
+                        class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow border border-slate-800 flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-file-pdf text-sm text-amber-400"></i>
+                        <span>Download PERA Summary (PDF)</span>
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs sm:text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-y border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+                                <th class="py-3 px-4">Year (Age)</th>
+                                <th class="py-3 px-4">Deposit</th>
+                                <th class="py-3 px-4">Cumul. Outlay</th>
+                                <th class="py-3 px-4">Inv. Growth</th>
+                                <th class="py-3 px-4 text-amber-600">5% Tax Credit</th>
+                                <th class="py-3 px-4">End Fund Bal</th>
+                                <th class="py-3 px-4 text-rose-600 border-l border-slate-200 bg-rose-50/40">20% Growth Tax</th>
+                                <th class="py-3 px-4 text-rose-600 bg-rose-50/40">Tax Credit Repay</th>
+                                <th class="py-3 px-4 text-right text-rose-700 font-bold bg-rose-50/70 border-l border-rose-200">Withdrawal Amount with Tax</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pera-table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <!-- JS injected rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SIDE-BY-SIDE COMPARISON MATRIX -->
+        <div id="compare-section" class="space-y-6 hidden">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center max-w-3xl mx-auto space-y-2">
+                <h2 class="text-2xl font-black text-slate-800">Pag-IBIG MP2 vs. PERA: Feature Comparison</h2>
+                <p class="text-sm text-slate-500">Determine which investment vehicle aligns best with your financial goals, liquidity timeline, and risk appetite.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900 text-white text-xs sm:text-sm uppercase tracking-wider">
+                                <th class="py-4 px-6 w-1/4">Feature / Metric</th>
+                                <th class="py-4 px-6 w-3/8 border-l border-slate-800 bg-phRed-800/90 text-white">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-piggy-bank"></i>
+                                        <span>Pag-IBIG MP2</span>
+                                    </div>
+                                </th>
+                                <th class="py-4 px-6 w-3/8 border-l border-slate-800 bg-slate-800 text-white">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-line"></i>
+                                        <span>PERA (R.A. 9505)</span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-xs sm:text-sm text-slate-700">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-6 font-bold text-slate-900 bg-slate-50/50">Primary Goal</td>
+                                <td class="py-4 px-6 border-l border-slate-200">Medium-term high yield wealth building & savings</td>
+                                <td class="py-4 px-6 border-l border-slate-200">Dedicated tax-advantaged long-term retirement planning</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-6 font-bold text-slate-900 bg-slate-50/50">Deposit Flexibility</td>
+                                <td class="py-4 px-6 border-l border-slate-200 text-emerald-700 font-medium">Flexible: Monthly, one-time lump sum, or irregular anytime deposits permitted.</td>
+                                <td class="py-4 px-6 border-l border-slate-200 text-emerald-700 font-medium">Flexible: Monthly or one-time lump sum deposits allowed up to annual cap.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-6 font-bold text-slate-900 bg-slate-50/50">Capital Risk Level</td>
+                                <td class="py-4 px-6 border-l border-slate-200">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                        <i class="fa-solid fa-shield-cat"></i> Zero Risk (Gov't Guaranteed)
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 border-l border-slate-200">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                        <i class="fa-solid fa-chart-simple"></i> Market-linked (Conservative to Growth)
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-6 font-bold text-slate-900 bg-slate-50/50">Annual Contribution Cap</td>
+                                <td class="py-4 px-6 border-l border-slate-200 font-semibold text-slate-800">No Limit <span class="text-xs font-normal text-slate-500">(₱500 minimum per payment)</span></td>
+                                <td class="py-4 px-6 border-l border-slate-200 font-semibold text-slate-800">
+                                    ₱200,000 / yr (Local)<br>
+                                    <span class="text-phRed-700 font-bold">₱400,000 / yr (OFW)</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-6 font-bold text-slate-900 bg-slate-50/50">Tax Perks & Incentives</td>
+                                <td class="py-4 px-6 border-l border-slate-200">100% Tax-Free dividend earnings (Exempt from 20% final tax)</td>
+                                <td class="py-4 px-6 border-l border-slate-200 space-y-1">
+                                    <div class="text-emerald-700 font-bold">1. 5% Annual Income Tax Credit Certificate</div>
+                                    <div>2. Tax-exempt investment returns & capital gains</div>
+                                    <div>3. Tax-free withdrawal at age 55</div>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-6 font-bold text-slate-900 bg-slate-50/50">Holding Period / Lock-in</td>
+                                <td class="py-4 px-6 border-l border-slate-200 font-semibold text-slate-800">5 Years <span class="text-xs font-normal text-slate-500">(Renewable upon maturity)</span></td>
+                                <td class="py-4 px-6 border-l border-slate-200 font-semibold text-slate-800">Until Age 55 AND minimum 5 years of contribution</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-4 px-6 font-bold text-slate-900 bg-slate-50/50">Early Withdrawal Penalty</td>
+                                <td class="py-4 px-6 border-l border-slate-200 text-xs">Allowed for specific reasons (Total disability, death, critical illness) with partial dividend forfeiture.</td>
+                                <td class="py-4 px-6 border-l border-slate-200 text-xs text-phRed-700 font-medium">Strict penalties: 20% tax on investment earnings + repayment of all claimed 5% tax credits.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-white">Pinoy Wealth Calculators</span>
+                <span>• Built for Philippine Financial Literacy</span>
+            </div>
+            <div class="text-center md:text-right text-slate-500">
+                <p>Calculations are estimates for illustration purposes only. Dividend rates and investment yields fluctuate.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT COMPUTATION ENGINE & CHART LOGIC -->
+    <script>
+        let currentTab = 'mp2';
+        let mp2ChartInstance = null;
+        let peraChartInstance = null;
+
+        let mp2Mode = 'monthly';
+        let mp2Term = 5;
+        let mp2CustomAmounts = {};
+
+        let peraMode = 'monthly';
+        let peraCategory = 'local';
+        let peraCustomAmounts = {};
+
+        // Stored arrays for CSV Export
+        let mp2ExportRows = [];
+        let peraExportRows = [];
+
+        function formatPHP(amount) {
+            return '₱' + Math.round(amount).toLocaleString('en-PH');
+        }
+
+        function fetchLatestMP2Rates() {
+            const btn = document.getElementById('update-mp2-btn');
+            const icon = document.getElementById('update-mp2-icon');
+            const statusToast = document.getElementById('mp2-status-toast');
+            const statusMsg = document.getElementById('mp2-status-msg');
+
+            icon.classList.add('fa-spin');
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const latestRates = [
+                    { year: 2025, rate: 7.12 },
+                    { year: 2024, rate: 7.10 },
+                    { year: 2023, rate: 7.05 },
+                    { year: 2022, rate: 7.03 },
+                    { year: 2021, rate: 6.00 }
+                ];
+
+                const newestRate = latestRates[0].rate;
+
+                const rateSlider = document.getElementById('mp2-rate-slider');
+                rateSlider.value = newestRate;
+                document.getElementById('mp2-rate-val').innerText = newestRate.toFixed(2) + '%';
+                document.getElementById('mp2-latest-rate-badge').innerHTML = `${newestRate.toFixed(2)}% <span class="text-xs font-normal text-slate-500">(2025 Rate)</span>`;
+
+                calculateMP2();
+
+                icon.classList.remove('fa-spin');
+                btn.disabled = false;
+
+                statusToast.classList.remove('hidden');
+                statusMsg.innerText = `Latest MP2 dividend rate synced (${newestRate}% for 2025)!`;
+                
+                setTimeout(() => {
+                    statusToast.classList.add('hidden');
+                }, 4000);
+            }, 800);
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const mp2Sec = document.getElementById('mp2-section');
+            const peraSec = document.getElementById('pera-section');
+            const compareSec = document.getElementById('compare-section');
+
+            const mp2Btn = document.getElementById('tab-mp2-btn');
+            const peraBtn = document.getElementById('tab-pera-btn');
+            const compareBtn = document.getElementById('tab-compare-btn');
+
+            [mp2Btn, peraBtn, compareBtn].forEach(btn => {
+                btn.className = "px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 text-white hover:text-white/90 hover:bg-white/10";
+            });
+
+            mp2Sec.classList.add('hidden');
+            peraSec.classList.add('hidden');
+            compareSec.classList.add('hidden');
+
+            if (tab === 'mp2') {
+                mp2Sec.classList.remove('hidden');
+                mp2Btn.className = "px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 bg-white text-phRed-700 shadow-md";
+                calculateMP2();
+            } else if (tab === 'pera') {
+                peraSec.classList.remove('hidden');
+                peraBtn.className = "px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 bg-white text-phRed-700 shadow-md";
+                calculatePERA();
+            } else if (tab === 'compare') {
+                compareSec.classList.remove('hidden');
+                compareBtn.className = "px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 bg-white text-phRed-700 shadow-md";
+            }
+        }
+
+        // =========================================================================================
+        // PAG-IBIG MP2 LOGIC
+        // =========================================================================================
+        function setMP2Mode(mode) {
+            mp2Mode = mode;
+            const monthlyBtn = document.getElementById('mp2-mode-monthly-btn');
+            const lumpsumBtn = document.getElementById('mp2-mode-lumpsum-btn');
+            const customBtn = document.getElementById('mp2-mode-custom-btn');
+            
+            const stdContainer = document.getElementById('mp2-standard-input-container');
+            const customContainer = document.getElementById('mp2-custom-inputs-container');
+
+            const amountLabel = document.getElementById('mp2-amount-label');
+            const amountInput = document.getElementById('mp2-amount');
+            const amountSlider = document.getElementById('mp2-amount-slider');
+            const minBadge = document.getElementById('mp2-min-badge');
+
+            // Reset tab styles
+            [monthlyBtn, lumpsumBtn, customBtn].forEach(b => {
+                b.className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-800";
+            });
+
+            if (mode === 'monthly') {
+                monthlyBtn.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200";
+                stdContainer.classList.remove('hidden');
+                customContainer.classList.add('hidden');
+
+                amountLabel.innerText = "Monthly Contribution (PHP)";
+                minBadge.innerText = "Min: ₱500";
+                amountInput.max = 100000;
+                amountSlider.max = 100000;
+                if (parseFloat(amountInput.value) > 100000) {
+                    amountInput.value = 5000;
+                    amountSlider.value = 5000;
+                }
+            } else if (mode === 'lumpsum') {
+                lumpsumBtn.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200";
+                stdContainer.classList.remove('hidden');
+                customContainer.classList.add('hidden');
+
+                amountLabel.innerText = "One-Time Lump Sum Deposit (PHP)";
+                minBadge.innerText = "Isang Bagsakan";
+                amountInput.max = 2000000;
+                amountSlider.max = 2000000;
+                if (parseFloat(amountInput.value) < 10000 || parseFloat(amountInput.value) === 5000) {
+                    amountInput.value = 100000;
+                    amountSlider.value = 100000;
+                }
+            } else if (mode === 'custom') {
+                customBtn.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200";
+                stdContainer.classList.add('hidden');
+                customContainer.classList.remove('hidden');
+                renderMP2CustomInputs();
+            }
+            calculateMP2();
+        }
+
+        function renderMP2CustomInputs() {
+            const listContainer = document.getElementById('mp2-custom-years-list');
+            listContainer.innerHTML = '';
+
+            for (let y = 1; y <= mp2Term; y++) {
+                if (mp2CustomAmounts[y] === undefined) {
+                    mp2CustomAmounts[y] = (y === 1 || y === 4) ? 60000 : 0;
+                }
+                const val = mp2CustomAmounts[y];
+
+                const itemHtml = `
+                    <div class="flex items-center justify-between gap-3 text-xs">
+                        <span class="font-bold text-slate-700 shrink-0 w-16">Year ${y}:</span>
+                        <div class="relative w-full">
+                            <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 font-medium">₱</span>
+                            <input type="number" min="0" step="1000" value="${val}" oninput="updateMP2CustomVal(${y}, this.value)"
+                                class="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-phRed-600 text-slate-800 font-bold">
+                        </div>
+                    </div>
+                `;
+                listContainer.insertAdjacentHTML('beforeend', itemHtml);
+            }
+        }
+
+        function updateMP2CustomVal(year, val) {
+            mp2CustomAmounts[year] = parseFloat(val) || 0;
+            calculateMP2();
+        }
+
+        function setMP2Term(years) {
+            mp2Term = years;
+            document.querySelectorAll('.mp2-term-btn').forEach(btn => {
+                btn.className = "mp2-term-btn py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all";
+            });
+            const activeBtn = document.getElementById(`mp2-term-${years}`);
+            if (activeBtn) {
+                activeBtn.className = "mp2-term-btn py-2 text-xs font-bold rounded-xl border border-phRed-600 bg-phRed-50 text-phRed-700 transition-all";
+            }
+            if (mp2Mode === 'custom') {
+                renderMP2CustomInputs();
+            }
+            calculateMP2();
+        }
+
+        function syncMP2Slider(type, val) {
+            if (type === 'amount') {
+                document.getElementById('mp2-amount').value = val;
+            } else if (type === 'rate') {
+                document.getElementById('mp2-rate-val').innerText = parseFloat(val).toFixed(2) + '%';
+            }
+            calculateMP2();
+        }
+
+        function calculateMP2() {
+            const amountInput = parseFloat(document.getElementById('mp2-amount').value) || 0;
+            const rateInput = parseFloat(document.getElementById('mp2-rate-slider').value) || 7.12;
+            document.getElementById('mp2-rate-val').innerText = rateInput.toFixed(2) + '%';
+            
+            document.getElementById('mp2-amount-slider').value = Math.min(amountInput, mp2Mode === 'monthly' ? 100000 : 2000000);
+
+            const payoutType = document.querySelector('input[name="mp2-payout-type"]:checked').value;
+            const annualRate = rateInput / 100;
+
+            let totalPrincipal = 0;
+            let totalDividends = 0;
+            let currentBalance = 0;
+
+            const yearLabels = [];
+            const principalSeries = [];
+            const dividendSeries = [];
+
+            mp2ExportRows = []; // reset export data
+
+            const tableBody = document.getElementById('mp2-table-body');
+            tableBody.innerHTML = '';
+
+            for (let year = 1; year <= mp2Term; year++) {
+                yearLabels.push(`Year ${year}`);
+                const startBal = currentBalance;
+                let annualDeposit = 0;
+                let yearDividend = 0;
+
+                if (mp2Mode === 'monthly') {
+                    annualDeposit = amountInput * 12;
+                    totalPrincipal += annualDeposit;
+                    
+                    if (payoutType === 'compounded') {
+                        yearDividend = (startBal * annualRate) + (amountInput * 6.5 * annualRate);
+                        totalDividends += yearDividend;
+                        currentBalance = startBal + annualDeposit + yearDividend;
+                    } else {
+                        yearDividend = (startBal * annualRate) + (amountInput * 6.5 * annualRate);
+                        totalDividends += yearDividend;
+                        currentBalance = startBal + annualDeposit;
+                    }
+                } else if (mp2Mode === 'lumpsum') {
+                    if (year === 1) {
+                        annualDeposit = amountInput;
+                        totalPrincipal = amountInput;
+                        currentBalance = amountInput;
+                    } else {
+                        annualDeposit = 0;
+                    }
+
+                    if (payoutType === 'compounded') {
+                        yearDividend = currentBalance * annualRate;
+                        totalDividends += yearDividend;
+                        currentBalance = currentBalance + yearDividend;
+                    } else {
+                        yearDividend = totalPrincipal * annualRate;
+                        totalDividends += yearDividend;
+                    }
+                } else if (mp2Mode === 'custom') {
+                    annualDeposit = mp2CustomAmounts[year] || 0;
+                    totalPrincipal += annualDeposit;
+
+                    if (payoutType === 'compounded') {
+                        yearDividend = (startBal + annualDeposit) * annualRate;
+                        totalDividends += yearDividend;
+                        currentBalance = startBal + annualDeposit + yearDividend;
+                    } else {
+                        yearDividend = (startBal + annualDeposit) * annualRate;
+                        totalDividends += yearDividend;
+                        currentBalance = startBal + annualDeposit;
+                    }
+                }
+
+                principalSeries.push(totalPrincipal);
+                dividendSeries.push(Math.round(totalDividends));
+
+                const finalEndBal = payoutType === 'compounded' ? currentBalance : (totalPrincipal + totalDividends);
+
+                // Push row data for CSV
+                mp2ExportRows.push({
+                    year: `Year ${year}`,
+                    startBalance: Math.round(startBal),
+                    annualDeposit: Math.round(annualDeposit),
+                    yearDividend: Math.round(yearDividend),
+                    payoutAction: payoutType === 'compounded' ? 'Reinvested' : `Paid Out (${Math.round(yearDividend)})`,
+                    endBalance: Math.round(finalEndBal)
+                });
+
+                const rowHtml = `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100 transition-colors">
+                        <td class="py-3 px-4 font-bold text-slate-800">Year ${year}</td>
+                        <td class="py-3 px-4">${formatPHP(startBal)}</td>
+                        <td class="py-3 px-4 text-emerald-700 font-semibold">${annualDeposit > 0 ? '+' + formatPHP(annualDeposit) : '₱0'}</td>
+                        <td class="py-3 px-4 text-phRed-600 font-semibold">+${formatPHP(yearDividend)}</td>
+                        <td class="py-3 px-4 text-slate-500">
+                            ${payoutType === 'compounded' ? 
+                                `<span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[11px] font-semibold">Reinvested</span>` : 
+                                `<span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[11px] font-semibold">Paid Out (${formatPHP(yearDividend)})</span>`}
+                        </td>
+                        <td class="py-3 px-4 text-right font-extrabold text-slate-900">${formatPHP(finalEndBal)}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', rowHtml);
+            }
+
+            const totalMaturityValue = payoutType === 'compounded' ? currentBalance : (totalPrincipal + totalDividends);
+
+            document.getElementById('mp2-res-principal').innerText = formatPHP(totalPrincipal);
+            document.getElementById('mp2-res-principal-sub').innerText = mp2Mode === 'monthly' ? 'Your total monthly savings' : (mp2Mode === 'lumpsum' ? 'One-time initial deposit' : 'Total custom deposits');
+            document.getElementById('mp2-res-dividend').innerText = formatPHP(totalDividends);
+            document.getElementById('mp2-res-maturity').innerText = formatPHP(totalMaturityValue);
+            document.getElementById('mp2-res-maturity-sub').innerText = payoutType === 'compounded' ? 
+                `Total lump sum after ${mp2Term} years` : `Principal (${formatPHP(totalPrincipal)}) + Payouts (${formatPHP(totalDividends)})`;
+
+            updateMP2Chart(yearLabels, principalSeries, dividendSeries);
+        }
+
+        function updateMP2Chart(labels, principalData, dividendData) {
+            const ctx = document.getElementById('mp2Chart').getContext('2d');
+            if (mp2ChartInstance) mp2ChartInstance.destroy();
+
+            mp2ChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total Contributions', data: principalData, backgroundColor: '#CBD5E1', borderRadius: 6 },
+                        { label: 'Tax-Free Dividends', data: dividendData, backgroundColor: '#D32F2F', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Inter', size: 12 } } },
+                        tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + formatPHP(ctx.raw) } }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, ticks: { callback: (val) => '₱' + (val / 1000) + 'k' } }
+                    }
+                }
+            });
+        }
+
+        // =========================================================================================
+        // EXPORT MP2 COMPUTATION AS PDF
+        // =========================================================================================
+        function exportMP2PDF() {
+            if (!mp2ExportRows || mp2ExportRows.length === 0) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const modeStr = mp2Mode.toUpperCase();
+            const rateVal = document.getElementById('mp2-rate-slider').value;
+            const payoutStr = document.querySelector('input[name="mp2-payout-type"]:checked').value.toUpperCase();
+
+            // Header Banner
+            doc.setFillColor(183, 28, 28); // phRed-700
+            doc.rect(0, 0, 210, 25, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("Pag-IBIG MP2 Investment Schedule", 14, 16);
+
+            // Summary Parameters Section
+            doc.setTextColor(30, 41, 59); // Slate-800
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            
+            doc.text(`Deposit Strategy: ${modeStr}`, 14, 34);
+            doc.text(`Lock-in Horizon: ${mp2Term} Years`, 14, 40);
+            doc.text(`Est. Dividend Rate: ${rateVal}% p.a.`, 110, 34);
+            doc.text(`Payout Preference: ${payoutStr}`, 110, 40);
+
+            // Table Generation
+            const tableHeaders = [["Year", "Start Bal (PHP)", "Deposit (PHP)", "Dividends (PHP)", "Action", "End Bal (PHP)"]];
+            const tableBody = mp2ExportRows.map(row => [
+                row.year,
+                row.startBalance.toLocaleString('en-PH'),
+                row.annualDeposit.toLocaleString('en-PH'),
+                row.yearDividend.toLocaleString('en-PH'),
+                row.payoutAction,
+                row.endBalance.toLocaleString('en-PH')
+            ]);
+
+            doc.autoTable({
+                startY: 46,
+                head: tableHeaders,
+                body: tableBody,
+                headStyles: { fillColor: [183, 28, 28], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                styles: { fontSize: 9, font: 'helvetica' },
+                columnStyles: {
+                    1: { halign: 'right' },
+                    2: { halign: 'right' },
+                    3: { halign: 'right' },
+                    5: { halign: 'right' }
+                }
+            });
+
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(148, 163, 184);
+                doc.text(`Pinoy Investor Calculator • Pag-IBIG MP2 Report • Page ${i} of ${pageCount}`, 14, 287);
+            }
+
+            doc.save(`PagIBIG_MP2_Schedule_${mp2Term}Yrs.pdf`);
+        }
+
+        // =========================================================================================
+        // PERA AGE-BASED & EARLY WITHDRAWAL LOGIC
+        // =========================================================================================
+        function calculatePERAHorizonFromAge() {
+            const currentAgeInput = parseInt(document.getElementById('pera-current-age').value) || 30;
+            let yearsTo55 = 55 - currentAgeInput;
+            
+            if (yearsTo55 < 5) yearsTo55 = 5;
+
+            const slider = document.getElementById('pera-horizon-slider');
+            slider.value = yearsTo55;
+            
+            document.getElementById('pera-horizon-val').innerText = yearsTo55 + ' Yrs';
+            document.getElementById('pera-age-badge').innerText = `${yearsTo55} Yrs (Age ${currentAgeInput} to ${currentAgeInput + yearsTo55})`;
+
+            if (peraMode === 'custom') {
+                renderPERACustomInputs();
+            }
+
+            calculatePERA();
+        }
+
+        function setPERAMode(mode) {
+            peraMode = mode;
+            const monthlyBtn = document.getElementById('pera-mode-monthly-btn');
+            const lumpsumBtn = document.getElementById('pera-mode-lumpsum-btn');
+            const customBtn = document.getElementById('pera-mode-custom-btn');
+
+            const stdContainer = document.getElementById('pera-standard-input-container');
+            const customContainer = document.getElementById('pera-custom-inputs-container');
+
+            const amountLabel = document.getElementById('pera-amount-label');
+            const amountInput = document.getElementById('pera-amount');
+            const amountSlider = document.getElementById('pera-amount-slider');
+            const annualEquiv = document.getElementById('pera-annual-equiv');
+
+            const maxCap = (peraCategory === 'local') ? 200000 : 400000;
+
+            [monthlyBtn, lumpsumBtn, customBtn].forEach(b => {
+                b.className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-800";
+            });
+
+            if (mode === 'monthly') {
+                monthlyBtn.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200";
+                stdContainer.classList.remove('hidden');
+                customContainer.classList.add('hidden');
+
+                amountLabel.innerText = "Monthly Contribution (PHP)";
+                amountInput.max = Math.floor(maxCap / 12);
+                amountSlider.max = Math.floor(maxCap / 12);
+                if (parseFloat(amountInput.value) > Math.floor(maxCap / 12)) {
+                    amountInput.value = Math.floor(maxCap / 12);
+                    amountSlider.value = Math.floor(maxCap / 12);
+                }
+            } else if (mode === 'lumpsum') {
+                lumpsumBtn.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200";
+                stdContainer.classList.remove('hidden');
+                customContainer.classList.add('hidden');
+
+                amountLabel.innerText = "One-Time Lump Sum Deposit (PHP)";
+                annualEquiv.innerText = "Single Deposit";
+                amountInput.max = maxCap;
+                amountSlider.max = maxCap;
+                amountInput.value = maxCap;
+                amountSlider.value = maxCap;
+            } else if (mode === 'custom') {
+                customBtn.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-phRed-700 shadow-sm border border-slate-200";
+                stdContainer.classList.add('hidden');
+                customContainer.classList.remove('hidden');
+                renderPERACustomInputs();
+            }
+            calculatePERA();
+        }
+
+        function renderPERACustomInputs() {
+            const listContainer = document.getElementById('pera-custom-years-list');
+            listContainer.innerHTML = '';
+            const horizonYears = parseInt(document.getElementById('pera-horizon-slider').value) || 25;
+            const currentAge = parseInt(document.getElementById('pera-current-age').value) || 30;
+
+            for (let y = 1; y <= horizonYears; y++) {
+                if (peraCustomAmounts[y] === undefined) {
+                    peraCustomAmounts[y] = (y % 2 !== 0) ? 100000 : 0;
+                }
+                const val = peraCustomAmounts[y];
+                const age = currentAge + y;
+
+                const itemHtml = `
+                    <div class="flex items-center justify-between gap-3 text-xs">
+                        <span class="font-bold text-slate-700 shrink-0 w-24">Yr ${y} (Age ${age}):</span>
+                        <div class="relative w-full">
+                            <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 font-medium">₱</span>
+                            <input type="number" min="0" max="${peraCategory === 'local' ? 200000 : 400000}" step="5000" value="${val}" oninput="updatePERACustomVal(${y}, this.value)"
+                                class="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-phRed-600 text-slate-800 font-bold">
+                        </div>
+                    </div>
+                `;
+                listContainer.insertAdjacentHTML('beforeend', itemHtml);
+            }
+        }
+
+        function updatePERACustomVal(year, val) {
+            const maxCap = (peraCategory === 'local') ? 200000 : 400000;
+            let parsedVal = parseFloat(val) || 0;
+            if (parsedVal > maxCap) parsedVal = maxCap;
+            peraCustomAmounts[year] = parsedVal;
+            calculatePERA();
+        }
+
+        function setPERACategory(cat) {
+            peraCategory = cat;
+            const localBtn = document.getElementById('pera-cat-local');
+            const ofwBtn = document.getElementById('pera-cat-ofw');
+            const limitBadge = document.getElementById('pera-limit-badge');
+
+            if (cat === 'local') {
+                localBtn.className = "pera-cat-btn py-2.5 px-3 text-xs font-bold rounded-xl border border-phRed-600 bg-phRed-50 text-phRed-700 transition-all text-center";
+                ofwBtn.className = "pera-cat-btn py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all text-center";
+                limitBadge.innerHTML = '<span>Max Annual PERA Cap:</span> <span class="font-extrabold text-phRed-700">₱200,000 / yr</span>';
+            } else {
+                ofwBtn.className = "pera-cat-btn py-2.5 px-3 text-xs font-bold rounded-xl border border-phRed-600 bg-phRed-50 text-phRed-700 transition-all text-center";
+                localBtn.className = "pera-cat-btn py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all text-center";
+                limitBadge.innerHTML = '<span>Max Annual PERA Cap (OFW):</span> <span class="font-extrabold text-phRed-700">₱400,000 / yr</span>';
+            }
+            if (peraMode === 'custom') {
+                renderPERACustomInputs();
+            }
+            setPERAMode(peraMode);
+        }
+
+        function syncPERASlider(type, val) {
+            if (type === 'amount') {
+                document.getElementById('pera-amount').value = val;
+            } else if (type === 'rate') {
+                document.getElementById('pera-rate-val').innerText = parseFloat(val).toFixed(1) + '%';
+            } else if (type === 'horizon') {
+                document.getElementById('pera-horizon-val').innerText = val + ' Yrs';
+                if (peraMode === 'custom') renderPERACustomInputs();
+            }
+            calculatePERA();
+        }
+
+        function calculatePERA() {
+            const currentAge = parseInt(document.getElementById('pera-current-age').value) || 30;
+            const amountInput = parseFloat(document.getElementById('pera-amount').value) || 0;
+            const rateInput = parseFloat(document.getElementById('pera-rate-slider').value) || 6.0;
+            const horizonYears = parseInt(document.getElementById('pera-horizon-slider').value) || 25;
+
+            document.getElementById('pera-rate-val').innerText = rateInput.toFixed(1) + '%';
+            document.getElementById('pera-horizon-val').innerText = horizonYears + ' Yrs';
+
+            const annualCap = (peraCategory === 'local') ? 200000 : 400000;
+            const annualTaxCreditCap = (peraCategory === 'local') ? 10000 : 20000;
+
+            let annualDeposit = 0;
+            if (peraMode === 'monthly') {
+                annualDeposit = Math.min(amountInput * 12, annualCap);
+                document.getElementById('pera-annual-equiv').innerText = formatPHP(annualDeposit) + ' / yr';
+            } else if (peraMode === 'lumpsum') {
+                annualDeposit = Math.min(amountInput, annualCap);
+                document.getElementById('pera-annual-equiv').innerText = 'Single Deposit (' + formatPHP(annualDeposit) + ')';
+            }
+
+            const returnRate = rateInput / 100;
+            let totalContributions = 0;
+            let fundBalance = 0;
+            let totalTaxCredits = 0;
+
+            const yearLabels = [];
+            const fundValueSeries = [];
+            const taxCreditSeries = [];
+
+            peraExportRows = []; // reset export array
+
+            const tableBody = document.getElementById('pera-table-body');
+            tableBody.innerHTML = '';
+
+            for (let year = 1; year <= horizonYears; year++) {
+                const userAge = currentAge + year;
+                yearLabels.push(`Yr ${year} (Age ${userAge})`);
+
+                let currentYearDeposit = 0;
+                if (peraMode === 'monthly') {
+                    currentYearDeposit = annualDeposit;
+                } else if (peraMode === 'lumpsum') {
+                    currentYearDeposit = (year === 1) ? annualDeposit : 0;
+                } else if (peraMode === 'custom') {
+                    currentYearDeposit = Math.min(peraCustomAmounts[year] || 0, annualCap);
+                }
+
+                totalContributions += currentYearDeposit;
+
+                const yearlyTaxCredit = Math.min(currentYearDeposit * 0.05, annualTaxCreditCap);
+                totalTaxCredits += yearlyTaxCredit;
+
+                fundBalance = (fundBalance + currentYearDeposit) * (1 + returnRate);
+
+                const grossEarnings = Math.max(0, fundBalance - totalContributions);
+                const penalty20PercentOnEarnings = grossEarnings * 0.20;
+                const taxCreditClawback = totalTaxCredits;
+
+                const isQualified55And5 = (userAge >= 55 && year >= 5);
+                
+                const currentEarlyTaxPenalty = isQualified55And5 ? 0 : penalty20PercentOnEarnings;
+                const currentTaxCreditRepay = isQualified55And5 ? 0 : taxCreditClawback;
+                const netWithdrawalAmountWithTax = isQualified55And5 ? 
+                    fundBalance : 
+                    Math.max(0, fundBalance - currentEarlyTaxPenalty - currentTaxCreditRepay);
+
+                fundValueSeries.push(Math.round(fundBalance));
+                taxCreditSeries.push(Math.round(totalTaxCredits));
+
+                // Push row data for PERA CSV Export
+                peraExportRows.push({
+                    yearLabel: `Year ${year}`,
+                    age: userAge,
+                    deposit: Math.round(currentYearDeposit),
+                    cumulOutlay: Math.round(totalContributions),
+                    invGrowth: Math.round(grossEarnings),
+                    taxCredit: Math.round(yearlyTaxCredit),
+                    endFundBal: Math.round(fundBalance),
+                    growthTax: Math.round(currentEarlyTaxPenalty),
+                    creditRepay: Math.round(currentTaxCreditRepay),
+                    netWithdrawal: Math.round(netWithdrawalAmountWithTax),
+                    isTaxFree: isQualified55And5
+                });
+
+                const rowHtml = `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100 transition-colors">
+                        <td class="py-3 px-4 font-bold text-slate-800">Yr ${year} <span class="text-slate-400 font-normal">(Age ${userAge})</span></td>
+                        <td class="py-3 px-4 font-semibold ${currentYearDeposit > 0 ? 'text-emerald-700' : 'text-slate-400'}">${currentYearDeposit > 0 ? formatPHP(currentYearDeposit) : '₱0'}</td>
+                        <td class="py-3 px-4">${formatPHP(totalContributions)}</td>
+                        <td class="py-3 px-4 text-emerald-600 font-semibold">${formatPHP(grossEarnings)}</td>
+                        <td class="py-3 px-4 font-bold text-amber-600">${yearlyTaxCredit > 0 ? '+' + formatPHP(yearlyTaxCredit) : '₱0'}</td>
+                        <td class="py-3 px-4 font-extrabold text-slate-900">${formatPHP(fundBalance)}</td>
+                        
+                        <!-- EARLY WITHDRAWAL & TAX BREAKDOWN COLUMNS -->
+                        <td class="py-3 px-4 text-rose-600 border-l border-slate-200 bg-rose-50/20">
+                            ${isQualified55And5 ? '<span class="text-emerald-600 font-bold">₱0 (Exempt)</span>' : '-' + formatPHP(currentEarlyTaxPenalty)}
+                        </td>
+                        <td class="py-3 px-4 text-rose-600 bg-rose-50/20">
+                            ${isQualified55And5 ? '<span class="text-emerald-600 font-bold">₱0 (Exempt)</span>' : '-' + formatPHP(currentTaxCreditRepay)}
+                        </td>
+                        <td class="py-3 px-4 text-right border-l border-rose-200 bg-rose-50/50">
+                            <div class="font-extrabold ${isQualified55And5 ? 'text-emerald-700' : 'text-slate-900'}">${formatPHP(netWithdrawalAmountWithTax)}</div>
+                            ${isQualified55And5 ? 
+                                `<span class="inline-block text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">Tax-Free (55/5 Rule)</span>` : 
+                                `<span class="inline-block text-[10px] text-rose-600 font-medium">Penalty: -${formatPHP(currentEarlyTaxPenalty + currentTaxCreditRepay)}</span>`}
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', rowHtml);
+            }
+
+            const netInvestmentGrowth = fundBalance - totalContributions;
+            const capitalGainsTaxSaved = netInvestmentGrowth * 0.15;
+            const grandTotalBenefit = fundBalance + totalTaxCredits;
+
+            document.getElementById('pera-res-principal').innerText = formatPHP(totalContributions);
+            document.getElementById('pera-res-growth').innerText = formatPHP(netInvestmentGrowth);
+            document.getElementById('pera-res-tax-credits').innerText = formatPHP(totalTaxCredits);
+            document.getElementById('pera-res-total-value').innerText = formatPHP(grandTotalBenefit);
+            document.getElementById('pera-res-cg-tax-saved').innerText = formatPHP(capitalGainsTaxSaved);
+
+            updatePERAChart(yearLabels, fundValueSeries, taxCreditSeries);
+        }
+
+        function updatePERAChart(labels, fundData, taxCreditData) {
+            const ctx = document.getElementById('peraChart').getContext('2d');
+            if (peraChartInstance) peraChartInstance.destroy();
+
+            peraChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total PERA Fund Value',
+                            data: fundData,
+                            borderColor: '#D32F2F',
+                            backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Accumulated BIR 5% Tax Credits',
+                            data: taxCreditData,
+                            borderColor: '#D97706',
+                            backgroundColor: 'rgba(217, 119, 6, 0.2)',
+                            fill: false,
+                            borderDash: [5, 5],
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Inter', size: 12 } } },
+                        tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + formatPHP(ctx.raw) } }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { ticks: { callback: (val) => '₱' + (val / 1000) + 'k' } }
+                    }
+                }
+            });
+        }
+
+        // =========================================================================================
+        // EXPORT PERA COMPUTATION AS PDF
+        // =========================================================================================
+        function exportPERAPDF() {
+            if (!peraExportRows || peraExportRows.length === 0) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' });
+
+            const startAge = document.getElementById('pera-current-age').value;
+            const categoryStr = peraCategory.toUpperCase();
+            const rateVal = document.getElementById('pera-rate-slider').value;
+            const horizonVal = document.getElementById('pera-horizon-slider').value;
+
+            // Header Banner
+            doc.setFillColor(30, 41, 59); // Slate-900
+            doc.rect(0, 0, 297, 25, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("PERA Retirement & Early Withdrawal Breakdown (R.A. 9505)", 14, 16);
+
+            // Parameters Summary
+            doc.setTextColor(30, 41, 59);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            
+            doc.text(`Starting Age: ${startAge} Yrs Old`, 14, 33);
+            doc.text(`Classification: ${categoryStr}`, 80, 33);
+            doc.text(`Horizon: ${horizonVal} Yrs (Age 55 Target)`, 150, 33);
+            doc.text(`Est. Annual Return: ${rateVal}% p.a.`, 230, 33);
+
+            // Table Generation
+            const tableHeaders = [["Year (Age)", "Deposit (PHP)", "Cumul. Capital", "Inv. Growth", "5% Tax Credit", "End Fund Bal", "20% Growth Tax", "Credit Repay", "Net Withdrawal (PHP)"]];
+            const tableBody = peraExportRows.map(row => [
+                `${row.yearLabel} (Age ${row.age})`,
+                row.deposit.toLocaleString('en-PH'),
+                row.cumulOutlay.toLocaleString('en-PH'),
+                row.invGrowth.toLocaleString('en-PH'),
+                row.taxCredit.toLocaleString('en-PH'),
+                row.endFundBal.toLocaleString('en-PH'),
+                row.isTaxFree ? 'Exempt' : '-' + row.growthTax.toLocaleString('en-PH'),
+                row.isTaxFree ? 'Exempt' : '-' + row.creditRepay.toLocaleString('en-PH'),
+                row.netWithdrawal.toLocaleString('en-PH')
+            ]);
+
+            doc.autoTable({
+                startY: 38,
+                head: tableHeaders,
+                body: tableBody,
+                headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                styles: { fontSize: 8, font: 'helvetica' },
+                columnStyles: {
+                    1: { halign: 'right' },
+                    2: { halign: 'right' },
+                    3: { halign: 'right' },
+                    4: { halign: 'right' },
+                    5: { halign: 'right' },
+                    6: { halign: 'right' },
+                    7: { halign: 'right' },
+                    8: { halign: 'right', fontStyle: 'bold' }
+                }
+            });
+
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(148, 163, 184);
+                doc.text(`Pinoy Investor Calculator • PERA Retirement Report • Page ${i} of ${pageCount}`, 14, 200);
+            }
+
+            doc.save(`PERA_Retirement_Schedule_Age${startAge}_to_55.pdf`);
+        }
+
+        window.onload = function() {
+            calculateMP2();
+            calculatePERAHorizonFromAge();
+        };
+    </script>
+</body>
+</html>
